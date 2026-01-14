@@ -49,16 +49,24 @@ jobs:
           echo ""
           echo "=== Step 3: Using First Valid Status ==="
           
-          final_status="$status1"
+          final_status=""
           
-          if [ "$status1" = "RUNNING" ] || [ "$status1" = "null" ]; then
+          # Önce .stage kontrol et (null değilse ve RUNNING ise)
+          if [ "$status1" = "RUNNING" ]; then
             final_status="$status1"
-          elif [ "$status2" = "READY" ]; then
+            echo "✅ Using root .stage status"
+          # Sonra domain stage kontrol et
+          elif [ "$status2" = "READY" ] || [ "$status2" = "RUNNING" ]; then
             final_status="$status2"
-            echo "ℹ️  Using domain status (READY)"
+            echo "✅ Using domain status ($status2)"
+          # En son runtime stage kontrol et
           elif [ "$status3" = "RUNNING" ]; then
             final_status="$status3"
-            echo "ℹ️  Using runtime status"
+            echo "✅ Using runtime status"
+          # Hiçbiri yoksa null olarak ayarla
+          else
+            final_status="null"
+            echo "⚠️ No valid status found, using null"
           fi
           
           echo "Final status to check: '$final_status'"
