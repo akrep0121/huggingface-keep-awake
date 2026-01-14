@@ -17,15 +17,11 @@ jobs:
           echo "Checking HuggingFace Space status via API..."
           response=$(curl -s -H "Authorization: Bearer $HF_TOKEN" \
             "https://huggingface.co/api/spaces/aassr/borsa-tavan-takip" | \
-            jq -r '.status.state')
+            jq -r '.stage')
           echo "Space status: $response"
           if [ "$response" = "RUNNING" ]; then
             echo "✅ Space is awake and running"
           else
-            echo "❌ Space is not running (Status: $response)"
-            echo "Attempting to restart space..."
-            restart_response=$(curl -s -X POST \
-              -H "Authorization: Bearer $HF_TOKEN" \
-              "https://huggingface.co/api/spaces/aassr/borsa-tavan-takip/restart")
-            echo "Restart response: $restart_response"
+            echo "⚠️ Space is not running (Status: $response)"
+            echo "ℹ️  Monitoring only - NOT restarting"
           fi
