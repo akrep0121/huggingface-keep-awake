@@ -1,4 +1,4 @@
-name: Keep HuggingFace Space Awake
+name: Keep HuggingFace Space Awake (Private)
 
 on:
   schedule:
@@ -8,16 +8,24 @@ on:
 jobs:
   keep-awake:
     runs-on: ubuntu-latest
-    name: Ping HuggingFace Space
+    name: Check HuggingFace Space Status
     steps:
-      - name: Ping Health Endpoint
+      - name: Check Space Status via HuggingFace API
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "Pinging HuggingFace Space..."
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://aassr-borsa-tavan-takip.hf.space/health)
-          echo "HTTP Status Code: $response"
-          if [ $response -eq 200 ]; then
-            echo "✅ Space is awake and responding"
+          echo "Checking HuggingFace Space status via API..."
+          response=$(curl -s -H "Authorization: Bearer $HF_TOKEN" \
+            "https://huggingface.co/api/spaces/aassr/borsa-tavan-takip" | \
+            jq -r '.status.state')
+          echo "Space status: $response"
+          if [ "$response" = "RUNNING" ]; then
+            echo "✅ Space is awake and running"
           else
-            echo "❌ Space is not responding correctly (Status: $response)"
-            exit 1
+            echo "❌ Space is not running (Status: $response)"
+            echo "Attempting to restart space..."
+            restart_response=$(curl -s -X POST \
+              -H "Authorization: Bearer $HF_TOKEN" \
+              "https://huggingface.co/api/spaces/aassr/borsa-tavan-takip/restart")
+            echo "Restart response: $restart_response"
           fi
