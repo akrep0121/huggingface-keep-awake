@@ -1,0 +1,23 @@
+name: Keep HuggingFace Space Awake
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # Her 2 saatte bir (00:00, 02:00, 04:00...)
+  workflow_dispatch:  # Manuel tetikleme için buton
+
+jobs:
+  keep-awake:
+    runs-on: ubuntu-latest
+    name: Ping HuggingFace Space
+    steps:
+      - name: Ping Health Endpoint
+        run: |
+          echo "Pinging HuggingFace Space..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://aassr-borsa-tavan-takip.hf.space/health)
+          echo "HTTP Status Code: $response"
+          if [ $response -eq 200 ]; then
+            echo "✅ Space is awake and responding"
+          else
+            echo "❌ Space is not responding correctly (Status: $response)"
+            exit 1
+          fi
